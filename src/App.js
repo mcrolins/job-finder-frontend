@@ -6,16 +6,24 @@ function App() {
     const [location, setLocation] = useState('remote');
 
     const fetchJobs = useCallback(async () => {
-        setLoading(true);
-        const res = await fetch(`http://localhost:8000/api/jobs/?q=${keyword}&l=${location}`);
-        const data = await res.json();
-        setJobs(data.results || []);
-        setLoading(false);
-    }, [keyword, location]); // ← Now it depends on keyword & location
-    
-    useEffect(() => {
-        fetchJobs();
-    }, [fetchJobs]); // ← No more warning!
+  setLoading(true);
+  
+  // Use environment variable or fallback to localhost
+  const API_URL = 'https://job-finder-api-tke5.onrender.com' || 'http://localhost:8000';
+  const url = `${API_URL}/api/jobs/?q=${encodeURIComponent(keyword)}&l=${encodeURIComponent(location)}`;
+  
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    setJobs(data.results || []);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    alert("Failed to load jobs");
+  } finally {
+    setLoading(false);
+  }
+}, [keyword, location]);
     
     return (
         <div>
